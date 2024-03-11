@@ -16,7 +16,7 @@ jobs:
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
     - name: Push to my internal registry
-      if: github.ref == 'refs/heads/"main"'
+      if: github.ref == 'refs/heads/"master"'
       run: docker push macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
     - name: Exit code failure
       if: failure()
