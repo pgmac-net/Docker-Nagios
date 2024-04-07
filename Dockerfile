@@ -94,6 +94,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmp                                \
         snmpd                               \
         snmp-mibs-downloader                \
+        sqlite3                             \
         unzip                               \
         python3                             \
                                                 && \
@@ -201,16 +202,16 @@ RUN cd /tmp                                                          && \
     wget http://www.nagvis.org/share/nagvis-${NAGVIS_RELEASE}.tar.gz && \
     tar zxvf nagvis-${NAGVIS_RELEASE}.tar.gz                         && \
     cd nagvis-${NAGVIS_RELEASE}                                      && \
-    ./install.sh -n ${NAGIOS_HOME}      \
-      -s Nagios                         \
-      -u ${NAGIOS_USER}                 \
-      -g ${NAGIOS_GROUP}                \
-      -g ${NAGIOS_GROUP}                \
-      -p /opt/nagvis                    \
-      -w /etc/apache2                   \
-      -a y -q
-RUN cd / && rm -r /tmp/nagvis-${NAGVIS_RELEASE}
-RUN a2enconf nagvis
+    ./install.sh -n ${NAGIOS_HOME}         \
+      -s Nagios                            \
+      -u ${NAGIOS_USER}                    \
+      -g ${NAGIOS_GROUP}                   \
+      -p /opt/nagvis                       \
+      -w /etc/apache2                      \
+      -a y -q                           && \
+    cd /tmp                             && \
+    rm -r /tmp/nagvis-${NAGVIS_RELEASE} && \
+    a2enconf nagvis
 
 RUN cd /opt                                                                         && \
     pip install pymssql paho-mqtt pymssql                                           && \
@@ -316,6 +317,6 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
 
 EXPOSE 80 5667 
 
-VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
+VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc" "/opt/nagvis/var" "/opt/nagvis/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]
