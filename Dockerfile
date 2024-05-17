@@ -23,7 +23,6 @@ ENV NRPE_BRANCH            nrpe-4.1.0
 ENV NCPA_BRANCH            v3.0.1
 ENV NSCA_BRANCH            nsca-2.10.2
 ENV NAGIOSTV_VERSION       0.8.7
-ENV NAGVIS_RELEASE         1.9.40
 
 
 RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
@@ -198,21 +197,6 @@ RUN cd /tmp                                                          && \
     cp share/nagiosgraph.ssi ${NAGIOS_HOME}/share/ssi/common-header.ssi && \
     cd /tmp && rm -Rf nagiosgraph
 
-RUN cd /tmp                                                          && \
-    wget http://www.nagvis.org/share/nagvis-${NAGVIS_RELEASE}.tar.gz && \
-    tar zxvf nagvis-${NAGVIS_RELEASE}.tar.gz                         && \
-    cd nagvis-${NAGVIS_RELEASE}                                      && \
-    ./install.sh -n ${NAGIOS_HOME}         \
-      -s Nagios                            \
-      -u ${NAGIOS_USER}                    \
-      -g ${NAGIOS_GROUP}                   \
-      -p /opt/nagvis                       \
-      -w /etc/apache2                      \
-      -a y -q                           && \
-    cd /tmp                             && \
-    rm -r /tmp/nagvis-${NAGVIS_RELEASE} && \
-    a2enconf nagvis
-
 RUN cd /opt                                                                         && \
     pip install pymssql paho-mqtt pymssql                                           && \
     git clone https://github.com/willixix/naglio-plugins.git     WL-Nagios-Plugins  && \
@@ -317,6 +301,6 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
 
 EXPOSE 80 5667 
 
-VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc" "/opt/nagvis/var" "/opt/nagvis/etc"
+VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]
