@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:mantic-20240530
 MAINTAINER Jason Rivers <jason@jasonrivers.co.uk>
 
 ENV NAGIOS_HOME            /opt/nagios
