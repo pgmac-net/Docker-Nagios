@@ -76,7 +76,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         libtext-glob-perl                   \
         libwww-perl                         \
         m4                                  \
-        netcat                              \
+        netcat-openbsd                      \
         parallel                            \
         php-cli                             \
         php-gd                              \
@@ -86,7 +86,9 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         php-php-gettext                     \
         php-sqlite3                         \
         postfix                             \
+        python3-paho-mqtt                   \
         python3-pip                         \
+        python3-pymssql                     \
         python3-nagiosplugin                \
         rsync                               \
         rsyslog                             \
@@ -200,7 +202,6 @@ RUN cd /tmp                                                          && \
     cd /tmp && rm -Rf nagiosgraph
 
 RUN cd /opt                                                                         && \
-    pip install pymssql paho-mqtt pymssql                                           && \
     git clone https://github.com/willixix/naglio-plugins.git     WL-Nagios-Plugins  && \
     git clone https://github.com/JasonRivers/nagios-plugins.git  JR-Nagios-Plugins  && \
     git clone https://github.com/justintime/nagios-plugins.git   JE-Nagios-Plugins  && \
