@@ -4,15 +4,15 @@ Docker image for Nagios
 
 Build Status: [![Build Status](https://travis-ci.org/JasonRivers/Docker-Nagios.svg?branch=master)](https://travis-ci.org/JasonRivers/Docker-Nagios)
 
-Nagios Core 4.4.14 running on Ubuntu 22.04 LTS with NagiosGraph & NRPE
+Nagios Core 4.5.5 running on Ubuntu 22.04 LTS with NagiosGraph & NRPE
 
 | Product | Version |
 | ------- | ------- |
-| Nagios Core | 4.5.2 |
-| Nagios Plugins | 2.4.8 |
-| NRPE | 4.1.0 |
-| NCPA | 3.0.1 |
-| NSCA | 2.10.2 |
+| Nagios Core | 4.5.25|
+| Nagios Plugins | 2.4.12 |
+| NRPE | 4.1.1 |
+| NCPA | 3.1.1 |
+| NSCA | 2.10.3 |
 
 ### Configurations
 Nagios Configuration lives in /opt/nagios/etc

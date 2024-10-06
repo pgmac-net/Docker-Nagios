@@ -6,12 +6,12 @@ ENV NAGIOS_USER            nagios
 ENV NAGIOS_GROUP           nagios
 ENV NAGIOS_CMDUSER         nagios
 ENV NAGIOS_CMDGROUP        nagios
-ENV NAGIOS_FQDN            nagios.example.com
+ENV NAGIOS_FQDN            status.int.pgmac.net
 ENV NAGIOSADMIN_USER       nagiosadmin
 ENV NAGIOSADMIN_PASS       nagios
 ENV APACHE_RUN_USER        nagios
 ENV APACHE_RUN_GROUP       nagios
-ENV NAGIOS_TIMEZONE        UTC
+ENV NAGIOS_TIMEZONE        Australia/Brisbane
 ENV DEBIAN_FRONTEND        noninteractive
 ENV NG_NAGIOS_CONFIG_FILE  ${NAGIOS_HOME}/etc/nagios.cfg
 ENV NG_CGI_DIR             ${NAGIOS_HOME}/sbin
@@ -49,6 +49,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         libcgi-pm-perl                      \
         libcrypt-des-perl                   \
         libcrypt-rijndael-perl              \
+        libcrypt-x509-perl                  \
         libdbd-mysql-perl                   \
         libdbd-pg-perl                      \
         libdbi-dev                          \
@@ -72,6 +73,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         librrds-perl                        \
         libssl-dev                          \
         libswitch-perl                      \
+        libtext-glob-perl                   \
         libwww-perl                         \
         m4                                  \
         netcat                              \
@@ -257,10 +259,14 @@ RUN echo "use_timezone=${NAGIOS_TIMEZONE}" >> ${NAGIOS_HOME}/etc/nagios.cfg
 
 # Copy example config in-case the user has started with empty var or etc
 
-RUN mkdir -p /orig/var                     && \
-    mkdir -p /orig/etc                     && \
-    cp -Rp ${NAGIOS_HOME}/var/* /orig/var/ && \
-    cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/ 
+RUN mkdir -p /orig/var                            && \
+    mkdir -p /orig/etc                            && \
+    mkdir -p /orig/graph-etc                      && \
+    mkdir -p /orig/graph-var                      && \
+    cp -Rp ${NAGIOS_HOME}/var/* /orig/var/        && \
+    cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/        && \
+    cp -Rp /opt/nagiosgraph/etc/* /orig/graph-etc && \
+    cp -Rp /opt/nagiosgraph/var/* /orig/graph-var
 
 ## Set the permissions for example config
 RUN find /opt/nagios/etc \! -user ${NAGIOS_USER} -exec chown ${NAGIOS_USER}:${NAGIOS_GROUP} '{}' + && \
