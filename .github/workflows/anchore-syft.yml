@@ -1,0 +1,70 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow checks out code, builds an image, performs a container image
+# scan with Anchore's Syft tool, and uploads the results to the GitHub Dependency
+# submission API.
+
+# For more information on the Anchore sbom-action usage
+# and parameters, see https://github.com/anchore/sbom-action. For more
+# information about the Anchore SBOM tool, Syft, see
+# https://github.com/anchore/syft
+name: Anchore Syft SBOM scan
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: [ "Build my Nagios image and push to my registry" ]
+    types: [ completed ]
+  push:
+    branches: [ "master" ]
+
+jobs:
+  Anchore-Build-Scan:
+    permissions:
+      contents: write # required to upload to the Dependency submission API
+      id-token: write
+      attestations: write
+      actions: read
+    runs-on: self-hosted
+    steps:
+    - name: Scan the image and upload dependency results
+      uses: anchore/sbom-action@bb716408e75840bbb01e839347cd213767269d4a
+      with:
+        image: macro.int.pgmac.net:5000/nagios:0.0.7  # Start hardcoded - figure out inputs later
+        format: cyclonedx-json
+        output-file: syft-sbom.json
+        artifact-name: syft-sbom.json
+        dependency-snapshot: true
+
+    - name: Upload SBoM to GitHub Artifact storage
+      uses: actions/upload-artifact@v4
+      with:
+        name: syft-sbom.json
+        path: 'syft-sbom.json'
+        retention-days: 2
+        overwrite: true
+
+    - name: SHA256 hash the SBoM
+      id: sha256
+      run: echo "SHA256=$(sha256sum syft-sbom.json | cut -d ' ' -f1)" >> $GITHUB_ENV
+
+    - name: Attest the SBoM
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-name: macro.int.pgmac.net:5000/Docker-Nagios/syft-sbom.json
+        subject-digest: sha256:${{ env.SHA256 }}
+        show-summary: true
+        push-to-registry: true
+
+    - name: Upload SBoM to Dependency Track
+      uses: DependencyTrack/gh-upload-sbom@v3.1.0
+      with:
+        serverhostname: 'dtrack.int.pgmac.net'
+        protocol: 'https'
+        apikey: ${{ secrets.DT_APIKEY }}
+        project: ${{ secrets.DT_PROJECT_UUID }}
+        bomfilename: 'syft-sbom.json'
+        autocreate: false
