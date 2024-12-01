@@ -65,6 +65,7 @@ jobs:
         serverHostname: 'dtrack.int.pgmac.net'
         protocol: 'https'
         apiKey: ${{ secrets.DT_APIKEY }}
-        project: ${{ secrets.DT_PROJECT_UUID }}
+        projectName: Docker-Nagios
+        projectVersion: 0.0.7
         bomFilename: 'syft-sbom.json'
-        autoCreate: false
+        autoCreate: true
