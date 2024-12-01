@@ -57,7 +57,7 @@ jobs:
         subject-name: macro.int.pgmac.net:5000/Docker-Nagios/syft-sbom.json
         subject-digest: sha256:${{ env.SHA256 }}
         show-summary: true
-        push-to-registry: true
+        push-to-registry: false
 
     - name: Upload SBoM to Dependency Track
       uses: DependencyTrack/gh-upload-sbom@v3.1.0
