@@ -62,9 +62,9 @@ jobs:
     - name: Upload SBoM to Dependency Track
       uses: DependencyTrack/gh-upload-sbom@v3.1.0
       with:
-        serverhostname: 'dtrack.int.pgmac.net'
+        serverHostname: 'dtrack.int.pgmac.net'
         protocol: 'https'
-        apikey: ${{ secrets.DT_APIKEY }}
+        apiKey: ${{ secrets.DT_APIKEY }}
         project: ${{ secrets.DT_PROJECT_UUID }}
-        bomfilename: 'syft-sbom.json'
-        autocreate: false
+        bomFilename: 'syft-sbom.json'
+        autoCreate: false
