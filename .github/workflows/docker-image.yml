@@ -1,4 +1,4 @@
-name: Build my Nagaios image and push to my registry
+name: Build my Nagios image and push to my registry
 
 on:
   push:
