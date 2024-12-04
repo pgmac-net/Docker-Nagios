@@ -18,11 +18,9 @@ on:
   workflow_run:
     workflows: [ "Build my Nagios image and push to my registry" ]
     types: [ completed ]
-  push:
-    branches:
-      - master
-    tags:
-      - "*.*.*"
+  # push:
+  #   tags:
+  #     - "*.*.*"
 
 jobs:
   Anchore-Build-Scan:
