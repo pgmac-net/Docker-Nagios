@@ -95,22 +95,6 @@ jobs:
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
-  sbom-verify:
-    runs-on: self-hosted
-    needs: [sbom-build-attest]
-    steps:
-      - name: Download a Build Artifact
-        uses: actions/download-artifact@v4.1.8
-        with:
-          # Name of the artifact to download. If unspecified, all artifacts for the run are downloaded.
-          #name: sbom.json
-          merge-multiple: false
-
-      - name: Verify the artefact attestation
-        run: gh attestation verify sbom.json/sbom.json -R ${{ github.repository }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-
   sbom-scan:
     runs-on: self-hosted
     needs: [sbom-build-attest]
