@@ -10,7 +10,7 @@ permissions: read-all
 
 jobs:
   sbom-build-attest:
-    runs-on: default
+    runs-on: self-hosted
     permissions:
       id-token: write
       attestations: write
@@ -96,7 +96,7 @@ jobs:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
   sbom-verify:
-    runs-on: default
+    runs-on: self-hosted
     needs: [sbom-build-attest]
     steps:
       - name: Download a Build Artifact
@@ -112,7 +112,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
   sbom-scan:
-    runs-on: default
+    runs-on: self-hosted
     needs: [sbom-build-attest]
     steps:
       - name: Download a Build Artifact
