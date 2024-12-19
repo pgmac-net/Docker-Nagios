@@ -43,15 +43,8 @@ jobs:
         format: cyclonedx-json
         output-file: syft-sbom.json
         artifact-name: syft-sbom.json
+        upload-artifact: true
         dependency-snapshot: true
-
-    - name: Upload SBoM to GitHub Artifact storage
-      uses: actions/upload-artifact@v4
-      with:
-        name: syft-sbom.json
-        path: 'syft-sbom.json'
-        retention-days: 2
-        overwrite: true
 
     - name: SHA256 hash the SBoM
       id: sha256
