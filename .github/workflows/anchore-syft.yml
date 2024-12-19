@@ -18,11 +18,9 @@ on:
   workflow_run:
     workflows: [ "Build my Nagios image and push to my registry" ]
     types: [ completed ]
-  push:
-    branches:
-      - master
-    tags:
-      - "*.*.*"
+  # push:
+  #   tags:
+  #     - "*.*.*"
 
 jobs:
   Anchore-Build-Scan:
@@ -40,7 +38,8 @@ jobs:
     - name: Scan the image and upload dependency results
       uses: anchore/sbom-action@bb716408e75840bbb01e839347cd213767269d4a
       with:
-        image: macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
+        #image: macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
+        path: ./
         format: cyclonedx-json
         output-file: syft-sbom.json
         artifact-name: syft-sbom.json
