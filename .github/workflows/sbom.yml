@@ -97,7 +97,7 @@ jobs:
 
   sbom-verify:
     runs-on: default
-    needs: [sbom-attest]
+    needs: [sbom-build-attest]
     steps:
       - name: Download a Build Artifact
         uses: actions/download-artifact@v4.1.8
@@ -113,7 +113,7 @@ jobs:
 
   sbom-scan:
     runs-on: default
-    needs: [sbom-attest]
+    needs: [sbom-build-attest]
     steps:
       - name: Download a Build Artifact
         uses: actions/download-artifact@v4.1.8
