@@ -37,8 +37,8 @@ jobs:
           -H 'Content-Type: multipart/form-data' \
           -H "X-Api-Key: ${{ secrets.DT_APIKEY }}" \
           -F "autoCreate=true" \
-          -F "projectName=secscanrep" \
-          -F "projectVersion=1.0" \
+          -F "projectName=${{ github.event.repository.name }}" \
+          -F "projectVersion=${{ github.sha }}" \
           -F "bom=@sbom.json"
 
       - name: Build the SHA256 digest
@@ -47,6 +47,7 @@ jobs:
           echo "sha256=sha256:$(sha256sum sbom.json | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
 
       - name: Attest the SBoM
+        if: github.event.repository.visibility == 'public'
         uses: actions/attest-build-provenance@v1
         with:
           #subject-path: sbom.json
@@ -72,6 +73,7 @@ jobs:
           echo "sha256=sha256:$(sha256sum sbom-spdx.json | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
 
       - name: Attest the SBoM
+        if: github.event.repository.visibility == 'public'
         uses: actions/attest-build-provenance@v1
         with:
           #subject-path: sbom.json
@@ -91,6 +93,7 @@ jobs:
           output-format: sarif
 
       - name: Upload SPDX SBoM scan SARIF report
+        if: github.event.repository.visibility == 'public'
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
@@ -107,6 +110,7 @@ jobs:
           merge-multiple: false
 
       - name: Verify the artefact attestation
+        if: github.event.repository.visibility == 'public'
         run: gh attestation verify ./sbom-spdx.json -R ${{ github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
