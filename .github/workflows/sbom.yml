@@ -37,7 +37,7 @@ jobs:
           -H 'Content-Type: multipart/form-data' \
           -H "X-Api-Key: ${{ secrets.DT_APIKEY }}" \
           -F "autoCreate=true" \
-          -F "projectName=${{ github.event.repository.name }}" \
+          -F "projectName=${{ github.repository }}" \
           -F "projectVersion=${{ github.sha }}" \
           -F "bom=@sbom.json"
 
