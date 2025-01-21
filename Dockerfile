@@ -61,7 +61,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         libjson-perl                        \
         libldap2-dev                        \
         libmonitoring-plugin-perl           \
-        libmysqlclient-dev                  \
+        libmariadb-dev                      \
         libnagios-object-perl               \
         libnet-snmp-perl                    \
         libnet-snmp-perl                    \
@@ -86,6 +86,8 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         php-php-gettext                     \
         php-sqlite3                         \
         postfix                             \
+        python3                             \
+        python3-venv                        \
         python3-paho-mqtt                   \
         python3-pip                         \
         python3-pymssql                     \
@@ -99,7 +101,6 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmp-mibs-downloader                \
         sqlite3                             \
         unzip                               \
-        python3                             \
                                                 && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
 
@@ -202,6 +203,7 @@ RUN cd /tmp                                                          && \
     cd /tmp && rm -Rf nagiosgraph
 
 RUN cd /opt                                                                         && \
+    pip install --break-system-packages pymssql paho-mqtt                           && \
     git clone https://github.com/willixix/naglio-plugins.git     WL-Nagios-Plugins  && \
     git clone https://github.com/JasonRivers/nagios-plugins.git  JR-Nagios-Plugins  && \
     git clone https://github.com/justintime/nagios-plugins.git   JE-Nagios-Plugins  && \
@@ -292,7 +294,7 @@ RUN cd /opt/nagiosgraph/etc && \
 RUN rm /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
 # enable all runit services
-RUN ln -s /etc/sv/* /etc/service
+RUN ln -sf /etc/sv/* /etc/service
 
 # fix ping permissions for nagios user
 RUN chmod u+s /usr/bin/ping
