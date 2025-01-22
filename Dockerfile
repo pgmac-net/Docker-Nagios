@@ -23,6 +23,7 @@ ENV NRPE_BRANCH            nrpe-4.1.3
 ENV NCPA_BRANCH            v3.1.2
 ENV NSCA_BRANCH            nsca-2.10.3
 ENV NAGIOSTV_VERSION       0.9.2
+ENV MK_LIVESTATUS_VERSION  1.5.0p23
 
 
 RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
@@ -101,6 +102,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmp-mibs-downloader                \
         sqlite3                             \
         unzip                               \
+        xinetd                              \
                                                 && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
 
@@ -229,6 +231,19 @@ RUN cd /tmp && \
     tar xf nagiostv-${NAGIOSTV_VERSION}.tar.gz -C /opt/nagios/share/ && \
     rm /tmp/nagiostv-${NAGIOSTV_VERSION}.tar.gz
 
+RUN cd /tmp                                                                                && \
+    wget https://macro.int.pgmac.net/mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz         && \
+    tar zxf mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz                                  && \
+    cd mk_livestatus                                                                       && \
+    ./configure --with-nagios4                                                             && \
+    make                                                                                   && \
+    make install                                                                           && \
+    cd /tmp && rm -Rf mk-livestatus-${MK_LIVESTATUS_VERSION}                               && \
+    cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
+
+RUN mkdir -p /usr/local/nagios/var/rw                             && \
+    chown ${NAGIOS_USER}:${NAGIOS_GROUP} /usr/local/nagios/var/rw
+
 RUN sed -i.bak 's/.*\=www\-data//g' /etc/apache2/envvars
 RUN export DOC_ROOT="DocumentRoot $(echo $NAGIOS_HOME/share)"                         && \
     sed -i "s,DocumentRoot.*,$DOC_ROOT," /etc/apache2/sites-enabled/000-default.conf  && \
@@ -266,10 +281,12 @@ RUN mkdir -p /orig/var                            && \
     mkdir -p /orig/etc                            && \
     mkdir -p /orig/graph-etc                      && \
     mkdir -p /orig/graph-var                      && \
+    mkdir -p /orig/xinetd.d                && \
     cp -Rp ${NAGIOS_HOME}/var/* /orig/var/        && \
     cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/        && \
     cp -Rp /opt/nagiosgraph/etc/* /orig/graph-etc && \
-    cp -Rp /opt/nagiosgraph/var/* /orig/graph-var
+    cp -Rp /opt/nagiosgraph/var/* /orig/graph-var && \
+    cp -Rp /etc/xinetd.d/* /orig/xinetd.d/
 
 ## Set the permissions for example config
 RUN find /opt/nagios/etc \! -user ${NAGIOS_USER} -exec chown ${NAGIOS_USER}:${NAGIOS_GROUP} '{}' + && \
@@ -308,7 +325,7 @@ RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.co
     ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf    && \
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
-EXPOSE 80 5667 
+EXPOSE 80 5667 6557
 
 VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
 
