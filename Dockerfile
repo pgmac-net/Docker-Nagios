@@ -24,6 +24,7 @@ ENV NCPA_BRANCH            v3.1.2
 ENV NSCA_BRANCH            nsca-2.10.3
 ENV NAGIOSTV_VERSION       0.9.2
 ENV MK_LIVESTATUS_VERSION  1.5.0p23
+ENV NAGVIS_VERSION         1.9.44
 
 
 RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
@@ -242,6 +243,14 @@ RUN cd /tmp                                                                     
     make install                                                                           && \
     cd /tmp && rm -Rf mk_livestatus                                                        && \
     cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
+
+# Installing nagvis
+RUN cd /opt/nagios  && \
+    git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
+    cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php && \
+    cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf && \
+    a2enconf apache2-nagvis && \
+    chown ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagios/nagvis/
 
 RUN mkdir -p /usr/local/nagios/var/rw                             && \
     chown ${NAGIOS_USER}:${NAGIOS_GROUP} /usr/local/nagios/var/rw
