@@ -71,6 +71,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         libpq-dev                           \
         libradsec-dev                       \
         libredis-perl                       \
+        librrd-dev                          \
         librrds-perl                        \
         libssl-dev                          \
         libswitch-perl                      \
@@ -231,6 +232,7 @@ RUN cd /tmp && \
     tar xf nagiostv-${NAGIOSTV_VERSION}.tar.gz -C /opt/nagios/share/ && \
     rm /tmp/nagiostv-${NAGIOSTV_VERSION}.tar.gz
 
+RUN apt-get update && apt-get install -y libboost-all-dev
 RUN cd /tmp                                                                                && \
     wget https://macro.int.pgmac.net/mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz         && \
     tar zxf mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz                                  && \
@@ -238,7 +240,7 @@ RUN cd /tmp                                                                     
     ./configure --with-nagios4                                                             && \
     make                                                                                   && \
     make install                                                                           && \
-    cd /tmp && rm -Rf mk-livestatus-${MK_LIVESTATUS_VERSION}                               && \
+    cd /tmp && rm -Rf mk_livestatus                                                        && \
     cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
 
 RUN mkdir -p /usr/local/nagios/var/rw                             && \
