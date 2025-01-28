@@ -245,12 +245,21 @@ RUN cd /tmp                                                                     
     cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
 
 # Installing nagvis
-RUN cd /opt/nagios  && \
+RUN cd /opt  && \
     git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
     cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php && \
     cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's%@NAGVIS_PATH@%/opt/nagvis/share%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's%@NAGVIS_WEB@%/nagvis%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's/#AuthName/AuthName/' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's/#AuthType/AuthType/' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's/#AuthUserFile/AuthUserFile/' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    sed -ie 's/#Require/Require/' /etc/apache2/conf-available/apache2-nagvis.conf && \
+    mkdir -p /opt/nagvis/var/tmpl/compile/ && \
+    mkdir -p /opt/nagvis/var/tmpl/cache/ && \
     a2enconf apache2-nagvis && \
-    chown ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagios/nagvis/
+    chown -R ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagvis/
 
 RUN mkdir -p /usr/local/nagios/var/rw                             && \
     chown ${NAGIOS_USER}:${NAGIOS_GROUP} /usr/local/nagios/var/rw
