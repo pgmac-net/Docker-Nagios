@@ -243,6 +243,7 @@ RUN cd /tmp                                                                     
     make install                                                                           && \
     cd /tmp && rm -Rf mk_livestatus                                                        && \
     cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
+RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nagios/var/rw/live" >> ${NAGIOS_HOME}/etc/nagios.cfg
 
 # Installing nagvis
 RUN cd /opt  && \
