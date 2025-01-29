@@ -147,11 +147,11 @@ RUN cd /tmp                                                                     
     git clone https://github.com/nagios-plugins/nagios-plugins.git -b $NAGIOS_PLUGINS_BRANCH  && \
     cd nagios-plugins                                                                         && \
     ./tools/setup                                                                             && \
-    ./configure                                                 \
-        --prefix=${NAGIOS_HOME}                                 \
-        --with-ipv6                                             \
-        --with-ping-command="/usr/bin/ping -n -U -W %d -c %d %s"  \
-        --with-ping6-command="/usr/bin/ping -6 -n -U -W %d -c %d %s"  \
+    ./configure                                                                                  \
+        --prefix=${NAGIOS_HOME}                                                                  \
+        --with-ipv6                                                                              \
+        --with-ping-command="/usr/bin/ping -n -U -W %d -c %d %s"                                 \
+        --with-ping6-command="/usr/bin/ping -6 -n -U -W %d -c %d %s"                             \
                                                                                               && \
     make                                                                                      && \
     make install                                                                              && \
@@ -246,23 +246,23 @@ RUN cd /tmp                                                                     
 RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nagios/var/rw/live" >> ${NAGIOS_HOME}/etc/nagios.cfg
 
 # Installing nagvis
-RUN cd /opt  && \
+RUN cd /opt                                                                                           && \
     git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
-    cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php && \
-    cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's%@NAGVIS_PATH@%/opt/nagvis/share%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's%@NAGVIS_WEB@%/nagvis%g' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's/#AuthName/AuthName/' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's/#AuthType/AuthType/' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's/#AuthUserFile/AuthUserFile/' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    sed -ie 's/#Require/Require/' /etc/apache2/conf-available/apache2-nagvis.conf && \
-    mkdir -p /opt/nagvis/var/tmpl/compile/ && \
-    mkdir -p /opt/nagvis/var/tmpl/cache/ && \
-    a2enconf apache2-nagvis && \
-    chown -R ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagvis/
-
-RUN mkdir -p /usr/local/nagios/var/rw                             && \
+    cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php                                     && \
+    sed -ie 's%^socket=.*$%socket="/usr/local/nagios/var/rw/live"%' nagvis/etc/nagvis.ini.php         && \
+    cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf          && \
+    sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf           && \
+    sed -ie 's%@NAGVIS_PATH@%/opt/nagvis/share%g' /etc/apache2/conf-available/apache2-nagvis.conf     && \
+    sed -ie 's%@NAGVIS_WEB@%/nagvis%g' /etc/apache2/conf-available/apache2-nagvis.conf                && \
+    sed -ie 's/#AuthName/AuthName/' /etc/apache2/conf-available/apache2-nagvis.conf                   && \
+    sed -ie 's/#AuthType/AuthType/' /etc/apache2/conf-available/apache2-nagvis.conf                   && \
+    sed -ie 's/#AuthUserFile/AuthUserFile/' /etc/apache2/conf-available/apache2-nagvis.conf           && \
+    sed -ie 's/#Require/Require/' /etc/apache2/conf-available/apache2-nagvis.conf                     && \
+    mkdir -p /opt/nagvis/var/tmpl/compile/                                                            && \
+    mkdir -p /opt/nagvis/var/tmpl/cache/                                                              && \
+    a2enconf apache2-nagvis                                                                           && \
+    chown -R ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagvis/                                              && \
+    mkdir -p /usr/local/nagios/var/rw                                                                 && \
     chown ${NAGIOS_USER}:${NAGIOS_GROUP} /usr/local/nagios/var/rw
 
 RUN sed -i.bak 's/.*\=www\-data//g' /etc/apache2/envvars
@@ -302,7 +302,7 @@ RUN mkdir -p /orig/var                            && \
     mkdir -p /orig/etc                            && \
     mkdir -p /orig/graph-etc                      && \
     mkdir -p /orig/graph-var                      && \
-    mkdir -p /orig/xinetd.d                && \
+    mkdir -p /orig/xinetd.d                       && \
     cp -Rp ${NAGIOS_HOME}/var/* /orig/var/        && \
     cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/        && \
     cp -Rp /opt/nagiosgraph/etc/* /orig/graph-etc && \
@@ -322,8 +322,8 @@ RUN a2enmod session         && \
 RUN chmod +x /usr/local/bin/start_nagios        && \
     chmod +x /etc/sv/apache/run                 && \
     chmod +x /etc/sv/nagios/run                 && \
-    chmod +x /etc/sv/postfix/run                 && \
-    chmod +x /etc/sv/rsyslog/run                 && \
+    chmod +x /etc/sv/postfix/run                && \
+    chmod +x /etc/sv/rsyslog/run                && \
     chmod +x /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
 RUN cd /opt/nagiosgraph/etc && \
@@ -341,13 +341,13 @@ ENV APACHE_LOCK_DIR /var/run
 ENV APACHE_LOG_DIR /var/log/apache2
 
 #Set ServerName and timezone for Apache
-RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf    && \
-    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf            && \
+RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf                 && \
+    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf                                  && \
     ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf    && \
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
 EXPOSE 80 5667 6557
 
-VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
+VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc" "/opt/nagvis/var" "/opt/nagvis/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]
