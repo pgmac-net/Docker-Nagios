@@ -23,6 +23,8 @@ ENV NRPE_BRANCH            nrpe-4.1.3
 ENV NCPA_BRANCH            v3.1.2
 ENV NSCA_BRANCH            nsca-2.10.3
 ENV NAGIOSTV_VERSION       0.9.2
+ENV MK_LIVESTATUS_VERSION  1.5.0p23
+ENV NAGVIS_VERSION         1.9.44
 
 
 RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
@@ -70,6 +72,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         libpq-dev                           \
         libradsec-dev                       \
         libredis-perl                       \
+        librrd-dev                          \
         librrds-perl                        \
         libssl-dev                          \
         libswitch-perl                      \
@@ -101,6 +104,7 @@ RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set
         snmp-mibs-downloader                \
         sqlite3                             \
         unzip                               \
+        xinetd                              \
                                                 && \
     apt-get clean && rm -Rf /var/lib/apt/lists/*
 
@@ -143,11 +147,11 @@ RUN cd /tmp                                                                     
     git clone https://github.com/nagios-plugins/nagios-plugins.git -b $NAGIOS_PLUGINS_BRANCH  && \
     cd nagios-plugins                                                                         && \
     ./tools/setup                                                                             && \
-    ./configure                                                 \
-        --prefix=${NAGIOS_HOME}                                 \
-        --with-ipv6                                             \
-        --with-ping-command="/usr/bin/ping -n -U -W %d -c %d %s"  \
-        --with-ping6-command="/usr/bin/ping -6 -n -U -W %d -c %d %s"  \
+    ./configure                                                                                  \
+        --prefix=${NAGIOS_HOME}                                                                  \
+        --with-ipv6                                                                              \
+        --with-ping-command="/usr/bin/ping -n -U -W %d -c %d %s"                                 \
+        --with-ping6-command="/usr/bin/ping -6 -n -U -W %d -c %d %s"                             \
                                                                                               && \
     make                                                                                      && \
     make install                                                                              && \
@@ -229,6 +233,38 @@ RUN cd /tmp && \
     tar xf nagiostv-${NAGIOSTV_VERSION}.tar.gz -C /opt/nagios/share/ && \
     rm /tmp/nagiostv-${NAGIOSTV_VERSION}.tar.gz
 
+RUN apt-get update && apt-get install -y libboost-all-dev
+RUN cd /tmp                                                                                && \
+    wget https://macro.int.pgmac.net/mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz         && \
+    tar zxf mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz                                  && \
+    cd mk_livestatus                                                                       && \
+    ./configure --with-nagios4                                                             && \
+    make                                                                                   && \
+    make install                                                                           && \
+    cd /tmp && rm -Rf mk_livestatus                                                        && \
+    cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
+RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nagios/var/rw/live" >> ${NAGIOS_HOME}/etc/nagios.cfg
+
+# Installing nagvis
+RUN cd /opt                                                                                           && \
+    git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
+    cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php                                     && \
+    sed -ie 's%^socket=.*$%socket="/usr/local/nagios/var/rw/live"%' nagvis/etc/nagvis.ini.php         && \
+    cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf          && \
+    sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf           && \
+    sed -ie 's%@NAGVIS_PATH@%/opt/nagvis/share%g' /etc/apache2/conf-available/apache2-nagvis.conf     && \
+    sed -ie 's%@NAGVIS_WEB@%/nagvis%g' /etc/apache2/conf-available/apache2-nagvis.conf                && \
+    sed -ie 's/#AuthName/AuthName/' /etc/apache2/conf-available/apache2-nagvis.conf                   && \
+    sed -ie 's/#AuthType/AuthType/' /etc/apache2/conf-available/apache2-nagvis.conf                   && \
+    sed -ie 's/#AuthUserFile/AuthUserFile/' /etc/apache2/conf-available/apache2-nagvis.conf           && \
+    sed -ie 's/#Require/Require/' /etc/apache2/conf-available/apache2-nagvis.conf                     && \
+    mkdir -p /opt/nagvis/var/tmpl/compile/                                                            && \
+    mkdir -p /opt/nagvis/var/tmpl/cache/                                                              && \
+    a2enconf apache2-nagvis                                                                           && \
+    chown -R ${NAGIOS_USER}:${NAGIOS_GROUP} /opt/nagvis/                                              && \
+    mkdir -p /usr/local/nagios/var/rw                                                                 && \
+    chown ${NAGIOS_USER}:${NAGIOS_GROUP} /usr/local/nagios/var/rw
+
 RUN sed -i.bak 's/.*\=www\-data//g' /etc/apache2/envvars
 RUN export DOC_ROOT="DocumentRoot $(echo $NAGIOS_HOME/share)"                         && \
     sed -i "s,DocumentRoot.*,$DOC_ROOT," /etc/apache2/sites-enabled/000-default.conf  && \
@@ -266,10 +302,12 @@ RUN mkdir -p /orig/var                            && \
     mkdir -p /orig/etc                            && \
     mkdir -p /orig/graph-etc                      && \
     mkdir -p /orig/graph-var                      && \
+    mkdir -p /orig/xinetd.d                       && \
     cp -Rp ${NAGIOS_HOME}/var/* /orig/var/        && \
     cp -Rp ${NAGIOS_HOME}/etc/* /orig/etc/        && \
     cp -Rp /opt/nagiosgraph/etc/* /orig/graph-etc && \
-    cp -Rp /opt/nagiosgraph/var/* /orig/graph-var
+    cp -Rp /opt/nagiosgraph/var/* /orig/graph-var && \
+    cp -Rp /etc/xinetd.d/* /orig/xinetd.d/
 
 ## Set the permissions for example config
 RUN find /opt/nagios/etc \! -user ${NAGIOS_USER} -exec chown ${NAGIOS_USER}:${NAGIOS_GROUP} '{}' + && \
@@ -284,8 +322,8 @@ RUN a2enmod session         && \
 RUN chmod +x /usr/local/bin/start_nagios        && \
     chmod +x /etc/sv/apache/run                 && \
     chmod +x /etc/sv/nagios/run                 && \
-    chmod +x /etc/sv/postfix/run                 && \
-    chmod +x /etc/sv/rsyslog/run                 && \
+    chmod +x /etc/sv/postfix/run                && \
+    chmod +x /etc/sv/rsyslog/run                && \
     chmod +x /opt/nagiosgraph/etc/fix-nagiosgraph-multiple-selection.sh
 
 RUN cd /opt/nagiosgraph/etc && \
@@ -303,13 +341,13 @@ ENV APACHE_LOCK_DIR /var/run
 ENV APACHE_LOG_DIR /var/log/apache2
 
 #Set ServerName and timezone for Apache
-RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf    && \
-    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf            && \
+RUN echo "ServerName ${NAGIOS_FQDN}" > /etc/apache2/conf-available/servername.conf                 && \
+    echo "PassEnv TZ" > /etc/apache2/conf-available/timezone.conf                                  && \
     ln -s /etc/apache2/conf-available/servername.conf /etc/apache2/conf-enabled/servername.conf    && \
     ln -s /etc/apache2/conf-available/timezone.conf /etc/apache2/conf-enabled/timezone.conf
 
-EXPOSE 80 5667 
+EXPOSE 80 5667 6557
 
-VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc"
+VOLUME "${NAGIOS_HOME}/var" "${NAGIOS_HOME}/etc" "/var/log/apache2" "/opt/Custom-Nagios-Plugins" "/opt/nagiosgraph/var" "/opt/nagiosgraph/etc" "/opt/nagvis/var" "/opt/nagvis/etc"
 
 CMD [ "/usr/local/bin/start_nagios" ]

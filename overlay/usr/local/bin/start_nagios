@@ -24,6 +24,11 @@ if [ -z "$(ls -A /opt/nagiosgraph/var)" ]; then
     cp -Rp /orig/graph-var/* /opt/nagiosgraph/var/
 fi
 
+if [ -z "$(ls -A /etc/xinetd.d)" ]; then
+    echo "Started with empty xinetd config, copying example data in-place"
+    cp -Rp /orig/xinetd.d/* /etc/xinetd.d/
+fi
+
 # Cleanup unclean shutdown
 [ -f /var/run/apache2/apache2.pid ] && rm /var/run/apache2/apache2.pid
 [ -f /var/run/nsca.pid ] && rm /var/run/nsca.pid
@@ -57,4 +62,3 @@ trap shutdown SIGTERM SIGHUP SIGINT
 wait "${RUNSVDIR}"
 
 shutdown
-
