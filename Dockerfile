@@ -249,6 +249,7 @@ RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nag
 RUN cd /opt                                                                                           && \
     git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
     cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php                                     && \
+    cp -r docs/ share/                                                                                && \
     sed -ie 's%^socket=.*$%socket="/usr/local/nagios/var/rw/live"%' nagvis/etc/nagvis.ini.php         && \
     cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf          && \
     sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf           && \
