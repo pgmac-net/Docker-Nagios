@@ -20,11 +20,14 @@ jobs:
         id: vars
         run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
-      - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
-
-      - name: Push to my internal registry
-        run: docker push macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
+      - name: Build and push Docker image
+        uses: docker://gcr.io/kaniko-project/executor:v1.23.2-debug
+        with:
+          args: >-
+            --context=/github/workspace
+            --dockerfile=/github/workspace/Dockerfile
+            --destination=macro.int.pgmac.net:5000/nagios:${{ inputs.tags || steps.vars.outputs.tag }}
+            --skip-tls-verify
 
       - name: Run Syft SBoM scan
         uses: anchore/sbom-action@v0.17.8
