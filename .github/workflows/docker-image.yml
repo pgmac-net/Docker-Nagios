@@ -6,6 +6,8 @@ on:
       - "*.*.*"
   workflow_dispatch:
 
+permissions: {}
+
 jobs:
   slack-start:
     uses: pgmac-net/pg-actions/.github/workflows/slack-notify-start.yml@main
