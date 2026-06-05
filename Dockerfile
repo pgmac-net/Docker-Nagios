@@ -17,14 +17,14 @@ ENV NG_NAGIOS_CONFIG_FILE  ${NAGIOS_HOME}/etc/nagios.cfg
 ENV NG_CGI_DIR             ${NAGIOS_HOME}/sbin
 ENV NG_WWW_DIR             ${NAGIOS_HOME}/share/nagiosgraph
 ENV NG_CGI_URL             /cgi-bin
-ENV NAGIOS_BRANCH          nagios-4.5.9
+ENV NAGIOS_BRANCH          nagios-4.5.11
 ENV NAGIOS_PLUGINS_BRANCH  release-2.4.12
 ENV NRPE_BRANCH            nrpe-4.1.3
-ENV NCPA_BRANCH            v3.1.2
+ENV NCPA_BRANCH            v3.2.2
 ENV NSCA_BRANCH            nsca-2.10.3
-ENV NAGIOSTV_VERSION       0.9.2
+ENV NAGIOSTV_VERSION       0.9.8
 ENV MK_LIVESTATUS_VERSION  1.5.0p23
-ENV NAGVIS_VERSION         1.9.44
+ENV NAGVIS_VERSION         1.9.48
 
 
 RUN echo postfix postfix/main_mailer_type string "'Internet Site'" | debconf-set-selections  && \
@@ -233,22 +233,24 @@ RUN cd /tmp && \
     tar xf nagiostv-${NAGIOSTV_VERSION}.tar.gz -C /opt/nagios/share/ && \
     rm /tmp/nagiostv-${NAGIOSTV_VERSION}.tar.gz
 
-RUN apt-get update && apt-get install -y libboost-all-dev
-RUN cd /tmp                                                                                && \
-    wget https://macro.int.pgmac.net/mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz         && \
-    tar zxf mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz                                  && \
-    cd mk_livestatus                                                                       && \
-    ./configure --with-nagios4                                                             && \
-    make                                                                                   && \
-    make install                                                                           && \
-    cd /tmp && rm -Rf mk_livestatus                                                        && \
-    cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
-RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nagios/var/rw/live" >> ${NAGIOS_HOME}/etc/nagios.cfg
+#RUN apt-get update && apt-get install -y libboost-all-dev
+#RUN cd /tmp                                                                                && \
+#    wget https://macro.int.pgmac.net/mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz         && \
+#    tar zxf mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz                                  && \
+#    cd mk_livestatus                                                                       && \
+#    ./configure --with-nagios4                                                             && \
+#    make                                                                                   && \
+#    make install                                                                           && \
+#    cd /tmp && rm -Rf mk_livestatus                                                        && \
+#    cd /tmp && rm -f mk-livestatus-${MK_LIVESTATUS_VERSION}.tar.gz
+#RUN echo "broker_module=/usr/local/lib/mk-livestatus/livestatus.o /usr/local/nagios/var/rw/live" >> ${NAGIOS_HOME}/etc/nagios.cfg
+COPY --from=checkmk/check-mk-raw:2.5.0-2025.01.31 /omd/sites/cmk/lib/mk-livestatus/livestatus.o /usr/local/lib/mk-livestatus/livestatus.o
 
 # Installing nagvis
 RUN cd /opt                                                                                           && \
     git clone --depth 1 --branch nagvis-${NAGVIS_VERSION} https://github.com/NagVis/nagvis.git nagvis && \
     cp nagvis/etc/nagvis.ini.php-sample nagvis/etc/nagvis.ini.php                                     && \
+    cp -r docs/ share/                                                                                && \
     sed -ie 's%^socket=.*$%socket="/usr/local/nagios/var/rw/live"%' nagvis/etc/nagvis.ini.php         && \
     cp nagvis/etc/apache2-nagvis.conf-sample /etc/apache2/conf-available/apache2-nagvis.conf          && \
     sed -ie 's%@NAGIOS_PATH@%/opt/nagios%g' /etc/apache2/conf-available/apache2-nagvis.conf           && \
