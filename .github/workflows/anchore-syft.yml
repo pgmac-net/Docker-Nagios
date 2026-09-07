@@ -29,6 +29,8 @@ jobs:
       id-token: write
       attestations: write
       actions: read
+    # self-hosted: uploads the SBOM to the internal Dependency-Track at dtrack.int.pgmac.net and
+    # attests against macro.int.pgmac.net:5000. See pgmac-net/homelabia#176.
     runs-on: self-hosted
     steps:
     - name: Set the image version

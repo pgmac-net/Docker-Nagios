@@ -20,6 +20,8 @@ jobs:
       attestations: write
       actions: read
       contents: write
+    # self-hosted: builds via BuildKit over TCP to buildkitd.arc-runners.svc.cluster.local and
+    # pushes to macro.int.pgmac.net:5000, then attests against that registry. See pgmac-net/homelabia#176.
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v3
